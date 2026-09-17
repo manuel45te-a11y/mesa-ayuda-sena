@@ -7,7 +7,7 @@
 --  registrados, que tendras que volver a insertar a mano en perfiles (el
 --  bloque comentado del final lo hace por ti).
 --
---  Orden:  00-limpiar.sql  ->  schema.sql  ->  seed.sql
+--  Orden:  00-limpiar.sql  ->  schema.sql  ->  seed.sql  ->  roles-y-asignacion.sql
 -- ============================================================================
 
 drop view if exists public.v_tickets_por_ambiente;
@@ -23,6 +23,10 @@ drop table if exists public.perfiles        cascade;
 
 drop sequence if exists public.seq_ticket;
 
+drop function if exists public.fn_evento_evidencia()           cascade;
+drop function if exists public.fn_proteger_perfil()            cascade;
+drop function if exists public.fn_puede_trabajar_ticket(uuid)  cascade;
+drop function if exists public.fn_tiene_evidencia(uuid)        cascade;
 drop function if exists public.fn_registrar_evento()    cascade;
 drop function if exists public.fn_seguimiento_estado()  cascade;
 drop function if exists public.fn_calcular_vencimiento() cascade;
@@ -48,6 +52,5 @@ drop type if exists rol_usuario      cascade;
 --  from auth.users
 --  on conflict (id) do nothing;
 --
---  Y luego asigna los roles:
---  update public.perfiles set rol = 'admin' where correo = 'tucorreo@gmail.com';
+--  Y luego nombra al administrador en la sección 10 de roles-y-asignacion.sql.
 -- ---------------------------------------------------------------------------

@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { traducirError } from '../lib/errores';
+import { volver } from '../navigation/rutas';
 import { Aviso, Boton, Campo, Rotulo } from '../components/ui';
 import Icono, { Logotipo } from '../components/Icono';
 import { c, r, s, t } from '../theme';
 
 export default function RecuperarClaveScreen({ navigation }) {
-  const { recuperarClave, actualizarClave, recuperandoClave, cancelarRecuperacion, demo } = useAuth();
+  const { recuperarClave, actualizarClave, recuperandoClave, salir, demo } = useAuth();
 
   const [correo, setCorreo] = useState('');
   const [nuevaClave, setNuevaClave] = useState('');
@@ -62,23 +63,19 @@ export default function RecuperarClaveScreen({ navigation }) {
 
     if (mensaje) {
       setError(traducirError(mensaje));
-      return;
     }
-
-    setOk('Contraseña actualizada correctamente. Ya puedes iniciar sesión con tu nueva clave.');
-    setTimeout(() => {
-      cancelarRecuperacion();
-      navigation.replace('Login');
-    }, 1500);
+    // Si salió bien no hay que navegar: el enlace del correo ya abrió sesión,
+    // así que al terminar la recuperación RootNavigator muestra la app.
   }
 
-  function volver() {
-    cancelarRecuperacion();
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.replace('Login');
+  async function alVolver() {
+    if (recuperandoClave) {
+      // Entró por el enlace del correo y decidió no cambiarla: se cierra esa
+      // sesión temporal y vuelve al acceso.
+      await salir();
+      return;
     }
+    volver(navigation, 'Login');
   }
 
   return (
@@ -88,7 +85,7 @@ export default function RecuperarClaveScreen({ navigation }) {
     >
       <ScrollView contentContainerStyle={a.scroll}>
         <View style={a.marco}>
-          <Pressable onPress={volver} style={a.volver} hitSlop={8}>
+          <Pressable onPress={alVolver} style={a.volver} hitSlop={8}>
             <Icono nombre="atras" tamano={17} color={c.textoSuave} />
             <Text style={[t.pequeno, { color: c.textoSuave }]}>Volver al inicio de sesión</Text>
           </Pressable>
@@ -147,7 +144,7 @@ export default function RecuperarClaveScreen({ navigation }) {
 
                 <Boton
                   titulo="Volver al inicio de sesión"
-                  onPress={volver}
+                  onPress={alVolver}
                   ancho
                 />
                 <View style={{ height: s.sm }} />

@@ -8,6 +8,7 @@ import {
   listar,
   modificar,
   obtener,
+  obtenerPorCodigo,
   porAmbiente,
 } from '../demo';
 
@@ -130,13 +131,13 @@ describe('flujo de atencion', () => {
     expect(despues.resuelto_at).not.toBeNull();
   });
 
-  it('deja un evento por cada cambio de estado', () => {
+  it('deja un evento por la asignacion y otro por el cierre, como la base de datos', () => {
     const t = ticketPendiente();
     modificar(t.id, { tecnico_id: 'demo-usuario', estado: 'en_proceso' });
     modificar(t.id, { estado: 'resuelto', solucion: 'Ya quedo funcionando.' });
 
     const tipos = eventosDe(t.id).map((e) => e.tipo);
-    expect(tipos).toEqual(['creacion', 'cambio_estado', 'cambio_estado']);
+    expect(tipos).toEqual(['creacion', 'asignacion', 'cambio_estado']);
 
     const ultimo = eventosDe(t.id).at(-1);
     expect(ultimo.estado_anterior).toBe('en_proceso');
@@ -153,6 +154,18 @@ describe('flujo de atencion', () => {
 
   it('devuelve null al pedir un ticket que no existe', () => {
     expect(obtener('no-existe')).toBeNull();
+  });
+});
+
+describe('busqueda por codigo (direcciones web)', () => {
+  it('encuentra el ticket aunque el codigo venga en minuscula o con espacios', () => {
+    const t = listar()[0];
+    expect(obtenerPorCodigo(` ${t.codigo.toLowerCase()} `).id).toBe(t.id);
+  });
+
+  it('devuelve null si el codigo no existe o no llega', () => {
+    expect(obtenerPorCodigo('MA-1999-0001')).toBeNull();
+    expect(obtenerPorCodigo(undefined)).toBeNull();
   });
 });
 

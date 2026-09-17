@@ -90,10 +90,18 @@ export const PRIORIDADES = {
   alta: { etiqueta: 'Alta', color: c.rojo, fondo: c.rojoBajo, barra: c.rojo },
 };
 
+// En la base de datos el rol de quien reporta se llama 'aprendiz'; en pantalla
+// se muestra como Usuario / Aprendiz porque también reportan instructores.
 export const ROLES = {
-  aprendiz: 'Aprendiz / Instructor',
+  aprendiz: 'Usuario / Aprendiz',
   tecnico: 'Técnico de soporte',
-  admin: 'Coordinador',
+  admin: 'Administrador',
+};
+
+export const COLOR_ROLES = {
+  aprendiz: { etiqueta: 'Usuario', color: c.azul, fondo: c.azulBajo },
+  tecnico: { etiqueta: 'Técnico', color: c.cian, fondo: c.cianBajo },
+  admin: { etiqueta: 'Admin', color: c.marcaAlta, fondo: c.marcaBaja },
 };
 
 // Allowed state transitions.

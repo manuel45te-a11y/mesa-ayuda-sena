@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { crearTicket } from '../lib/datos';
 import { useAuth } from '../context/AuthContext';
+import { volver } from '../navigation/rutas';
 import Pantalla from '../components/Pantalla';
 import { Aviso, Boton, Campo, Encabezado, Panel, Rotulo } from '../components/ui';
 import { c, PRIORIDADES, r, s, t } from '../theme';
@@ -57,7 +58,8 @@ export default function NuevoTicketScreen({ navigation }) {
       setError(err ?? 'No se pudo crear la solicitud.');
       return;
     }
-    navigation.replace('TicketDetalle', { id: ticket.id, codigo: ticket.codigo });
+    // replace: al volver desde la solicitud creada no se regresa al formulario.
+    navigation.replace('TicketDetalle', { codigo: ticket.codigo });
   }
 
   return (
@@ -70,7 +72,7 @@ export default function NuevoTicketScreen({ navigation }) {
           rotulo="Reporte"
           titulo="Nueva solicitud"
           descripcion="Describe la novedad del ambiente para asignarle atención inmediata."
-          volver={() => navigation.goBack()}
+          volver={() => volver(navigation, 'Tabs', { screen: 'Tickets' })}
         />
 
         <Aviso texto={error} />
@@ -140,7 +142,11 @@ export default function NuevoTicketScreen({ navigation }) {
         </Panel>
 
         <View style={a.acciones}>
-          <Boton titulo="Cancelar" variante="fantasma" onPress={() => navigation.goBack()} />
+          <Boton
+            titulo="Cancelar"
+            variante="fantasma"
+            onPress={() => volver(navigation, 'Tabs', { screen: 'Tickets' })}
+          />
           <Boton titulo="Enviar solicitud" onPress={onGuardar} cargando={enviando} icono="check" />
         </View>
       </Pantalla>

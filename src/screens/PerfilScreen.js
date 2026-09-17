@@ -5,18 +5,18 @@ import { diasRestantes } from '../lib/sesion';
 import Pantalla from '../components/Pantalla';
 import { Boton, Chip, Encabezado, Panel, Rotulo } from '../components/ui';
 import { Logotipo } from '../components/Icono';
-import { c, r, ROLES, s, t } from '../theme';
+import { c, COLOR_ROLES, r, ROLES, s, t } from '../theme';
 import { fechaCorta, iniciales } from '../lib/formato';
 
-const COLOR_ROL = {
-  aprendiz: { color: c.azul, fondo: c.azulBajo },
-  tecnico: { color: c.cian, fondo: c.cianBajo },
-  admin: { color: c.marcaAlta, fondo: c.marcaBaja },
-};
+const ROLES_DEMO = [
+  { rol: 'aprendiz', texto: 'Usuario' },
+  { rol: 'tecnico', texto: 'Técnico' },
+  { rol: 'admin', texto: 'Administrador' },
+];
 
 export default function PerfilScreen() {
-  const { perfil, sesion, salir, demo, diasSesion } = useAuth();
-  const rol = COLOR_ROL[perfil?.rol] ?? COLOR_ROL.aprendiz;
+  const { perfil, sesion, salir, demo, diasSesion, cambiarRolDemo } = useAuth();
+  const rol = COLOR_ROLES[perfil?.rol] ?? COLOR_ROLES.aprendiz;
   const [dias, setDias] = useState(null);
 
   useEffect(() => {
@@ -40,9 +40,34 @@ export default function PerfilScreen() {
         </View>
       </Panel>
 
+      {demo && (
+        <Panel estilo={{ marginBottom: s.md, borderColor: c.marca, borderWidth: 1 }}>
+          <Rotulo color={c.marcaAlta} estilo={{ marginBottom: 6 }}>
+            Modo demostración · Cambiar de rol
+          </Rotulo>
+          <Text style={[t.pequeno, { color: c.textoSuave, marginBottom: s.md }]}>
+            Prueba lo que puede hacer cada rol: el usuario reporta, el administrador asigna y el
+            técnico sube evidencias y cierra.
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: s.sm }}>
+            {ROLES_DEMO.map((btn) => (
+              <View key={btn.rol} style={{ flexGrow: 1, flexBasis: 110 }}>
+                <Boton
+                  titulo={btn.texto}
+                  variante={perfil?.rol === btn.rol ? 'primario' : 'secundario'}
+                  pequeno
+                  ancho
+                  onPress={() => cambiarRolDemo(btn.rol)}
+                />
+              </View>
+            ))}
+          </View>
+        </Panel>
+      )}
+
       <Panel estilo={{ marginBottom: s.md }}>
         <Rotulo estilo={{ marginBottom: s.md }}>Datos registrados</Rotulo>
-        <Dato clave="Correo" valor={sesion?.user?.email} />
+        <Dato clave="Correo" valor={perfil?.correo ?? sesion?.user?.email} />
         <Dato clave="Ficha" valor={perfil?.ficha} />
         <Dato clave="Programa" valor={perfil?.programa} />
         <Dato clave="Teléfono" valor={perfil?.telefono} />

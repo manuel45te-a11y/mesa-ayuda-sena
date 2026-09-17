@@ -1,15 +1,35 @@
 import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useLinkBuilder } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icono, { Logotipo } from '../components/Icono';
 import { useAuth } from '../context/AuthContext';
 import { ANCHO_LATERAL, c, r, ROLES, s, t } from '../theme';
 import { iniciales } from '../lib/formato';
+import { manejarClicEnlace, puedeEntrar } from './rutas';
+
+// Pestañas que el rol puede ver, cada una con su dirección web para que en el
+// navegador sea un enlace de verdad (se puede abrir en otra pestaña).
+function usePestanas(state, navigation) {
+  const { perfil } = useAuth();
+  const { buildHref } = useLinkBuilder();
+  const enfocada = state.routes[state.index]?.key;
+
+  return state.routes
+    .filter((ruta) => puedeEntrar(ruta.name, perfil?.rol))
+    .map((ruta) => ({
+      ruta,
+      activo: ruta.key === enfocada,
+      href: buildHref(ruta.name),
+      onPress: (evento) => manejarClicEnlace(evento, () => navigation.navigate(ruta.name)),
+    }));
+}
 
 const NOMBRES_VISIBLES = {
   Inicio: 'Inicio',
   Tickets: 'Solicitudes',
   Tablero: 'Tablero',
+  Usuarios: 'Usuarios',
   Perfil: 'Perfil',
 };
 
@@ -17,14 +37,22 @@ const ICONOS = {
   Inicio: 'panel',
   Tickets: 'bandeja',
   Tablero: 'pulso',
+  Usuarios: 'usuarios',
   Perfil: 'persona',
 };
+
+const ROLES_DEMO = [
+  { rol: 'aprendiz', texto: 'Usuario' },
+  { rol: 'tecnico', texto: 'Técnico' },
+  { rol: 'admin', texto: 'Admin' },
+];
 
 // ---------------------------------------------------------------------------
 //  Barra lateral (pantallas anchas)
 // ---------------------------------------------------------------------------
 export function BarraLateral({ state, navigation }) {
-  const { perfil, salir } = useAuth();
+  const { perfil, salir, demo, cambiarRolDemo } = useAuth();
+  const pestanas = usePestanas(state, navigation);
 
   return (
     <View style={b.lateral}>
@@ -37,18 +65,39 @@ export function BarraLateral({ state, navigation }) {
       </View>
 
       <View style={{ gap: 2 }}>
-        {state.routes.map((ruta, i) => (
+        {pestanas.map(({ ruta, activo, href, onPress }) => (
           <ItemLateral
             key={ruta.key}
             etiqueta={NOMBRES_VISIBLES[ruta.name] ?? ruta.name}
             icono={ICONOS[ruta.name]}
-            activo={state.index === i}
-            onPress={() => navigation.navigate(ruta.name)}
+            activo={activo}
+            href={href}
+            onPress={onPress}
           />
         ))}
       </View>
 
       <View style={{ flex: 1 }} />
+
+      {demo && (
+        <View style={b.cajaSelectorRol}>
+          <Text style={b.rolTitulo}>Cambiar de rol (demo)</Text>
+          <View style={b.filaRoles}>
+            {ROLES_DEMO.map((opcion) => {
+              const activo = perfil?.rol === opcion.rol;
+              return (
+                <Pressable
+                  key={opcion.rol}
+                  onPress={() => cambiarRolDemo(opcion.rol)}
+                  style={[b.botonRol, activo && b.botonRolActivo]}
+                >
+                  <Text style={[b.textoBotonRol, activo && b.textoBotonRolActivo]}>{opcion.texto}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      )}
 
       <View style={b.usuario}>
         <View style={b.avatar}>
@@ -70,11 +119,14 @@ export function BarraLateral({ state, navigation }) {
   );
 }
 
-function ItemLateral({ etiqueta, icono, activo, onPress }) {
+function ItemLateral({ etiqueta, icono, activo, href, onPress }) {
   const [encima, setEncima] = useState(false);
 
   return (
     <Pressable
+      href={href}
+      role="link"
+      aria-current={activo ? 'page' : undefined}
       onPress={onPress}
       onHoverIn={() => setEncima(true)}
       onHoverOut={() => setEncima(false)}
@@ -96,15 +148,18 @@ function ItemLateral({ etiqueta, icono, activo, onPress }) {
 // ---------------------------------------------------------------------------
 export function BarraInferior({ state, navigation }) {
   const insets = useSafeAreaInsets();
+  const pestanas = usePestanas(state, navigation);
 
   return (
     <View style={[b.inferior, { paddingBottom: Math.max(insets.bottom, s.sm) }]}>
-      {state.routes.map((ruta, i) => {
-        const activo = state.index === i;
+      {pestanas.map(({ ruta, activo, href, onPress }) => {
         return (
           <Pressable
             key={ruta.key}
-            onPress={() => navigation.navigate(ruta.name)}
+            href={href}
+            role="link"
+            aria-current={activo ? 'page' : undefined}
+            onPress={onPress}
             style={b.pestana}
           >
             <View style={[b.pestanaIcono, activo && { backgroundColor: c.marcaBaja }]}>
@@ -166,6 +221,50 @@ const b = StyleSheet.create({
     backgroundColor: c.marca,
   },
   itemTexto: { ...t.cuerpo, color: c.textoSuave, fontSize: 13.5 },
+
+  cajaSelectorRol: {
+    padding: 8,
+    backgroundColor: c.panelAlto,
+    borderRadius: r.md,
+    borderWidth: 1,
+    borderColor: c.linea,
+    marginBottom: s.sm,
+  },
+  rolTitulo: {
+    ...t.micro,
+    color: c.textoTenue,
+    fontSize: 9.5,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  filaRoles: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  botonRol: {
+    flex: 1,
+    paddingVertical: 4,
+    borderRadius: r.sm,
+    backgroundColor: c.panel,
+    borderWidth: 1,
+    borderColor: c.linea,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  botonRolActivo: {
+    backgroundColor: c.marcaBaja,
+    borderColor: c.marca,
+  },
+  textoBotonRol: {
+    ...t.micro,
+    color: c.textoTenue,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  textoBotonRolActivo: {
+    color: c.marcaAlta,
+    fontWeight: '700',
+  },
 
   usuario: {
     flexDirection: 'row',

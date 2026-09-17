@@ -293,13 +293,17 @@ export function Chip({ texto, color = c.textoSuave, fondo = c.grisBajo, punto = 
   );
 }
 
-export function Panel({ children, estilo, onPress, acento }) {
+// Con `href` (en la web) el panel se vuelve un enlace real: muestra la
+// dirección al pasar el mouse y se puede abrir en otra pestaña.
+export function Panel({ children, estilo, onPress, acento, href, role }) {
   const [encima, setEncima] = useState(false);
   const Caja = onPress ? Pressable : View;
 
   return (
     <Caja
       onPress={onPress}
+      href={href}
+      role={role}
       onHoverIn={onPress ? () => setEncima(true) : undefined}
       onHoverOut={onPress ? () => setEncima(false) : undefined}
       style={[e.panel, encima && { borderColor: c.lineaFuerte, backgroundColor: c.panelAlto }, estilo]}

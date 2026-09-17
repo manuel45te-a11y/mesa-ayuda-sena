@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useLinkProps } from '@react-navigation/native';
 import { resumenInicio } from '../lib/datos';
 import { useAuth } from '../context/AuthContext';
+import { destino } from '../navigation/rutas';
 import Pantalla from '../components/Pantalla';
 import TarjetaTicket from '../components/TarjetaTicket';
 import Icono from '../components/Icono';
@@ -15,6 +16,10 @@ export default function InicioScreen({ navigation }) {
   const [recientes, setRecientes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [refrescando, setRefrescando] = useState(false);
+
+  // Enlaces a la lista: el aviso de vencidas abre la lista ya filtrada.
+  const enlaceVencidas = useLinkProps(destino('Tickets', { filtro: 'vencidos' }));
+  const enlaceTodas = useLinkProps(destino('Tickets'));
 
   const cargar = useCallback(async () => {
     const resumen = await resumenInicio(usuarioId, esSoporte);
@@ -86,7 +91,7 @@ export default function InicioScreen({ navigation }) {
       </View>
 
       {datos.vencidos > 0 && (
-        <Pressable onPress={() => navigation.navigate('Tickets')}>
+        <Pressable {...enlaceVencidas}>
           <Panel estilo={a.alerta} acento={c.rojo}>
             <View style={a.alertaIcono}>
               <Icono nombre="alerta" tamano={17} color={c.rojo} />
@@ -108,7 +113,7 @@ export default function InicioScreen({ navigation }) {
 
       <View style={a.seccion}>
         <Rotulo>Actividad reciente</Rotulo>
-        <Pressable onPress={() => navigation.navigate('Tickets')} hitSlop={6}>
+        <Pressable {...enlaceTodas} hitSlop={6}>
           <Text style={a.verTodo}>Ver todas</Text>
         </Pressable>
       </View>
@@ -127,15 +132,7 @@ export default function InicioScreen({ navigation }) {
           }
         />
       ) : (
-        recientes.map((ticket) => (
-          <TarjetaTicket
-            key={ticket.id}
-            ticket={ticket}
-            onPress={() =>
-              navigation.navigate('TicketDetalle', { id: ticket.id, codigo: ticket.codigo })
-            }
-          />
-        ))
+        recientes.map((ticket) => <TarjetaTicket key={ticket.id} ticket={ticket} />)
       )}
     </Pantalla>
   );

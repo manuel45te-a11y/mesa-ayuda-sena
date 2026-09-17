@@ -1,9 +1,10 @@
 -- ============================================================================
 --  DATOS DE PRUEBA · Tickets de ejemplo para ver la aplicación con contenido
---  Ejecutar DESPUES de schema.sql y seed.sql, y DESPUES de crear tu usuario.
+--  Ejecutar DESPUES de schema.sql, seed.sql y roles-y-asignacion.sql, y
+--  DESPUES de crear tu usuario.
 --
 --  CAMBIA el correo de la línea marcada por el tuyo antes de ejecutar.
---  Flujo: pendiente -> en_proceso -> resuelto
+--  Flujo: pendiente -> en_proceso -> resuelto (con evidencia)
 -- ============================================================================
 
 do $$
@@ -82,6 +83,15 @@ begin
   ) returning id into v_id;
 
   update public.tickets set tecnico_id = v_yo, estado = 'en_proceso' where id = v_id;
+  -- Sin evidencia la base de datos no deja cerrar la solicitud.
+  insert into public.ticket_adjuntos (ticket_id, ruta, nombre, descripcion, subido_por)
+  values (
+    v_id,
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMwdgwFAAF0AMrCseKgAAAAAElFTkSuQmCC',
+    'sillas-reparadas.png',
+    'Tornillos nuevos en el espaldar de los puestos 8 y 9.',
+    v_yo
+  );
   update public.tickets
     set estado = 'resuelto',
         solucion = 'Se reemplazaron los tornillos del espaldar y se ajustaron ambas sillas.'

@@ -19,15 +19,21 @@
 | RF-05 | El sistema debe generar un código único consecutivo por ticket (formato `MA-AAAA-NNNN`) | Media |
 | RF-06 | El sistema debe calcular automáticamente la fecha de vencimiento según el tiempo de atención definido para la categoría | Alta |
 | RF-07 | El sistema debe listar los tickets con filtros por estado y por propiedad (míos / pendientes / todos) | Alta |
-| RF-08 | El técnico debe poder atender una falla pendiente, quedando como responsable y pasándola a *en proceso* | Alta |
+| RF-08 | El administrador debe poder asignar una falla pendiente a un técnico, y un técnico debe poder tomar una falla sin asignar; en ambos casos pasa a *en proceso* con un responsable | Alta |
 | RF-09 | El sistema debe permitir únicamente las transiciones de estado válidas del flujo definido | Alta |
 | RF-10 | El técnico debe registrar obligatoriamente la solución aplicada al marcar una falla como resuelta | Alta |
 | RF-11 | El sistema debe registrar automáticamente en una bitácora cada cambio de estado, con su autor y fecha | Alta |
-| RF-12 | El equipo de soporte debe poder cancelar un ticket que no procede | Media |
+| RF-12 | El administrador debe poder cancelar un ticket que no procede | Media |
 | RF-13 | El sistema debe señalar visualmente los tickets que superaron su tiempo de atención | Alta |
 | RF-14 | El coordinador debe visualizar indicadores: tickets por estado, tiempos promedio, cumplimiento del tiempo de atención y ambientes con más reportes | Alta |
 | RF-15 | El sistema debe restringir la información visible según el rol del usuario | Alta |
 | RF-16 | El coordinador debe poder administrar el catálogo de ambientes y categorías | Baja |
+| RF-17 | En la versión web, cada pantalla debe tener una dirección propia que se conserve al recargar, y cada solicitud debe poder abrirse y compartirse con un enlace que use su código (`/solicitudes/MA-AAAA-NNNN`) | Media |
+| RF-18 | El sistema debe mostrar un aviso de acceso restringido cuando un usuario abra, escribiendo la dirección, una pantalla que su rol no puede ver | Media |
+| RF-19 | El administrador debe poder reasignar una falla en proceso a otro técnico sin que cambie la fecha de primera atención | Media |
+| RF-20 | El técnico asignado debe adjuntar al menos una evidencia (foto y nota) antes de cerrar una falla; la foto se guarda reducida | Alta |
+| RF-21 | Toda cuenta nueva debe quedar con el rol de usuario, y solo el administrador debe poder cambiar los roles (nunca el suyo propio) | Alta |
+| RF-22 | La bitácora debe registrar las asignaciones, reasignaciones y evidencias con su autor y fecha | Media |
 
 ## 2.3 Requisitos no funcionales
 

@@ -18,6 +18,14 @@ const TRADUCCIONES = [
   ['Auth session missing', 'El enlace de recuperación ha expirado o ya fue utilizado. Solicita uno nuevo.'],
   ['For security purposes', 'Espera unos segundos antes de volver a intentarlo.'],
   ['Failed to fetch', 'No hay conexión con el servidor. Revisa tu internet.'],
+  // Base de datos sin roles-y-asignacion.sql (le falta la columna de la nota de la evidencia)
+  [
+    "'descripcion' column of 'ticket_adjuntos'",
+    'Falta actualizar la base de datos: ejecuta supabase/roles-y-asignacion.sql en el SQL Editor de Supabase.',
+  ],
+  ['row-level security', 'No tienes permiso para hacer este cambio.'],
+  ['permission denied', 'No tienes permiso para hacer este cambio.'],
+  ['Payload Too Large', 'La foto es demasiado pesada. Prueba con otra.'],
 ];
 
 export function traducirError(mensaje) {

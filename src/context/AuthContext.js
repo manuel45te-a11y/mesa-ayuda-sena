@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
-import { activarDemo, desactivarDemo, esDemo, PERFIL_DEMO, restaurarDemo } from '../lib/demo';
+import {
+  activarDemo,
+  cambiarRolDemo as cambiarRolDemoFn,
+  desactivarDemo,
+  esDemo,
+  obtenerPerfilDemo,
+  restaurarDemo,
+} from '../lib/demo';
 import { DIAS_SESION, limpiarInicio, marcarInicioSiFalta, sesionVencida } from '../lib/sesion';
 
 const CLAVE_MODO_DEMO = '@mesa_ayuda_modo_demo';
@@ -14,6 +21,7 @@ export function AuthProvider({ children }) {
   const [sesion, setSesion] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [demo, setDemo] = useState(false);
+  const [demoTick, setDemoTick] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [caducada, setCaducada] = useState(false);
   const [recuperandoClave, setRecuperandoClave] = useState(false);
@@ -123,7 +131,11 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const perfilActivo = demo ? PERFIL_DEMO : perfil;
+  // El rol sale del perfil guardado en la base de datos. Nada de correos fijos
+  // en el código: los administradores se nombran en roles-y-asignacion.sql y
+  // los demás roles los asigna el administrador desde la pantalla Usuarios.
+  const perfilActivo = demo ? obtenerPerfilDemo() : perfil;
+  const rol = perfilActivo?.rol ?? null;
 
   const valor = useMemo(
     () => ({
@@ -136,13 +148,25 @@ export function AuthProvider({ children }) {
       cancelarRecuperacion: () => setRecuperandoClave(false),
       diasSesion: DIAS_SESION,
       autenticado: (!!sesion || demo) && !recuperandoClave,
-      usuarioId: demo ? PERFIL_DEMO.id : (sesion?.user?.id ?? null),
-      esSoporte: perfilActivo?.rol === 'tecnico' || perfilActivo?.rol === 'admin',
-      esAdmin: perfilActivo?.rol === 'admin',
+      usuarioId: demo ? perfilActivo?.id : (sesion?.user?.id ?? null),
+      rol,
+      esSoporte: rol === 'tecnico' || rol === 'admin',
+      esAdmin: rol === 'admin',
+      esTecnico: rol === 'tecnico',
+      esUsuario: rol === 'aprendiz',
+
+      // En modo demostración cambia de perfil al instante para probar los tres roles.
+      cambiarRolDemo(nuevoRol) {
+        const p = cambiarRolDemoFn(nuevoRol);
+        setDemoTick((t) => t + 1);
+        return p;
+      },
 
       // Devuelve { error, requiereConfirmacion }. Cuando el proyecto exige
       // verificar el correo, Supabase no abre sesión: manda un enlace y deja
       // la cuenta esperando.
+      // No se envía rol: toda cuenta nace como Usuario / Aprendiz (lo asegura la
+      // base de datos) y el administrador asigna los demás roles.
       async registrar({ correo, clave, nombre, ficha, programa, telefono }) {
         const { data, error } = await supabase.auth.signUp({
           email: correo.trim(),
@@ -226,7 +250,7 @@ export function AuthProvider({ children }) {
         await cargarPerfil(sesion?.user?.id);
       },
     }),
-    [sesion, perfilActivo, cargando, demo, caducada]
+    [sesion, perfilActivo, cargando, demo, caducada, recuperandoClave, demoTick]
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;

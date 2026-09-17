@@ -1,11 +1,20 @@
 import { activarDemo, desactivarDemo } from '../demo';
 import {
   actualizarTicket,
+  asignarTecnico,
+  cambiarRol,
+  cancelarTicket,
   catalogos,
+  cerrarTicket,
   crearTicket,
+  listarTecnicos,
   listarTickets,
+  listarUsuarios,
+  obtenerEvidencias,
   obtenerTicket,
+  obtenerTicketPorCodigo,
   resumenInicio,
+  subirEvidencia,
   tablero,
 } from '../datos';
 
@@ -50,6 +59,24 @@ describe('capa de datos en modo demostración', () => {
     expect(error).toBeNull();
     expect(ticket.id).toBe(tickets[0].id);
     expect(eventos.length).toBeGreaterThan(0);
+  });
+
+  it('trae un ticket por su codigo, como llega desde la direccion web', async () => {
+    const { ticket, eventos, error } = await obtenerTicketPorCodigo('ma-2026-0001');
+
+    expect(error).toBeNull();
+    expect(ticket.codigo).toBe('MA-2026-0001');
+    expect(eventos.length).toBeGreaterThan(0);
+    expect(eventos.every((e) => e.ticket_id === ticket.id)).toBe(true);
+    expect(red).not.toHaveBeenCalled();
+  });
+
+  it('un codigo que no existe devuelve vacio y sin error', async () => {
+    const { ticket, eventos, error } = await obtenerTicketPorCodigo('MA-2026-9999');
+
+    expect(ticket).toBeNull();
+    expect(eventos).toEqual([]);
+    expect(error).toBeNull();
   });
 
   it('crea un ticket y lo devuelve con su codigo', async () => {
@@ -116,6 +143,35 @@ describe('capa de datos en modo demostración', () => {
 
     expect(resumen.pendientes).toBe(0);
     expect(resumen.recientes).toHaveLength(0);
+  });
+
+  it('asigna, sube evidencia y cierra sin salir a la red', async () => {
+    const { tickets } = await listarTickets();
+    const pendiente = tickets.find((t) => t.estado === 'pendiente' && !t.tecnico_id);
+
+    expect((await asignarTecnico(pendiente, 'demo-tecnico-1')).error).toBeNull();
+    expect(
+      (await subirEvidencia(pendiente.id, { imagen: 'data:image/png;base64,AAAA', nombre: 'foto.png', descripcion: 'Nota' }, 'demo-admin'))
+        .error
+    ).toBeNull();
+    expect((await obtenerEvidencias(pendiente.id)).evidencias).toHaveLength(1);
+    expect((await cerrarTicket(pendiente, { solucion: 'Se reemplazó la pieza dañada.' })).error).toBeNull();
+
+    const { ticket } = await obtenerTicket(pendiente.id);
+    expect(ticket.estado).toBe('resuelto');
+    expect(red).not.toHaveBeenCalled();
+  });
+
+  it('cancela y lista usuarios con sus roles sin salir a la red', async () => {
+    const { tickets } = await listarTickets();
+    const pendiente = tickets.find((t) => t.estado === 'pendiente');
+
+    expect((await cancelarTicket(pendiente)).error).toBeNull();
+    const { usuarios } = await listarUsuarios();
+    expect(usuarios.length).toBeGreaterThan(0);
+    expect((await cambiarRol('demo-tecnico-3', 'admin')).error).toBeNull();
+    expect((await listarTecnicos()).tecnicos.some((u) => u.id === 'demo-tecnico-3' && u.rol === 'admin')).toBe(true);
+    expect(red).not.toHaveBeenCalled();
   });
 
   it('entrega los indicadores del tablero', async () => {

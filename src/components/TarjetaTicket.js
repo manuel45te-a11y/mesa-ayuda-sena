@@ -1,17 +1,21 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useLinkProps } from '@react-navigation/native';
 import { Chip, Panel } from './ui';
 import Icono from './Icono';
 import { c, ESTADOS, PRIORIDADES, r, s, t } from '../theme';
 import { desde, sla } from '../lib/formato';
 
+// La tarjeta es un enlace a /solicitudes/<código>. Si quien la usa pasa su
+// propio `onPress`, ese manda.
 export default function TarjetaTicket({ ticket, onPress }) {
   const estado = ESTADOS[ticket.estado] ?? ESTADOS.pendiente;
   const prioridad = PRIORIDADES[ticket.prioridad] ?? PRIORIDADES.media;
   const reloj = sla(ticket.creado_at, ticket.vence_at, ticket.estado);
+  const enlace = useLinkProps({ screen: 'TicketDetalle', params: { codigo: ticket.codigo } });
 
   return (
-    <Panel onPress={onPress} estilo={x.panel}>
+    <Panel {...enlace} onPress={onPress ?? enlace.onPress} estilo={x.panel}>
       {/* Cabecera: Código, Prioridad y Estado */}
       <View style={x.cabeza}>
         <View style={x.cabezaIzq}>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { traducirError } from '../lib/errores';
+import { volver } from '../navigation/rutas';
 import { Aviso, Boton, Campo, Rotulo, Separador } from '../components/ui';
 import Icono, { Logotipo } from '../components/Icono';
 import { c, r, s, t } from '../theme';
@@ -105,7 +106,7 @@ export default function RegistroScreen({ navigation }) {
     >
       <ScrollView contentContainerStyle={a.scroll}>
         <View style={a.marco}>
-          <Pressable onPress={() => navigation.goBack()} style={a.volver} hitSlop={8}>
+          <Pressable onPress={() => volver(navigation, 'Login')} style={a.volver} hitSlop={8}>
             <Icono nombre="atras" tamano={17} color={c.textoSuave} />
             <Text style={[t.pequeno, { color: c.textoSuave }]}>Volver</Text>
           </Pressable>
@@ -115,7 +116,8 @@ export default function RegistroScreen({ navigation }) {
             <Rotulo estilo={{ marginTop: s.lg, marginBottom: s.sm }}>Nueva cuenta</Rotulo>
             <Text style={a.titulo}>Crea tu usuario</Text>
             <Text style={a.subtitulo}>
-              Con esta cuenta podrás reportar fallas y seguir su atención.
+              Con esta cuenta podrás reportar fallas y seguir su atención. Si eres técnico o
+              administrador, el administrador te asigna ese rol después de que te registres.
             </Text>
 
             <Aviso texto={error} />

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Mesa de Ayuda",
     "slug": "mesa-ayuda-sena",
+    "scheme": "mesaayuda",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -25,6 +26,15 @@
       "bundler": "metro",
       "output": "single",
       "backgroundColor": "#0B0F14"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La app usa tus fotos para adjuntar evidencias de las reparaciones.",
+          "cameraPermission": "La app usa la cámara para fotografiar las evidencias de las reparaciones."
+        }
+      ]
+    ]
   }
 }

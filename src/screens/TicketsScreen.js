@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { listarTickets } from '../lib/datos';
@@ -10,14 +10,21 @@ import { s } from '../theme';
 
 const ACTIVOS = ['pendiente', 'en_proceso'];
 
-export default function TicketsScreen({ navigation }) {
-  const { usuarioId, esSoporte } = useAuth();
-  const [filtro, setFiltro] = useState(esSoporte ? 'pendientes' : 'mios');
-  const [busqueda, setBusqueda] = useState('');
+// Espera antes de pasar la búsqueda a la dirección, para no reescribirla en
+// cada tecla.
+const PAUSA_BUSQUEDA_MS = 350;
+
+export default function TicketsScreen({ navigation, route }) {
+  const { usuarioId, esAdmin, esTecnico, esUsuario } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [refrescando, setRefrescando] = useState(false);
   const [error, setError] = useState('');
+
+  // El filtro y la búsqueda viven en la dirección (/solicitudes?filtro=vencidos&buscar=aire):
+  // así recargar la página no los borra y el enlace se puede compartir.
+  const buscarEnRuta = route.params?.buscar ?? '';
+  const [busqueda, setBusqueda] = useState(buscarEnRuta);
 
   // Se traen todos los visibles y el filtrado fino se hace en memoria: así los
   // contadores de cada pestaña son reales y no cuesta una consulta por filtro.
@@ -36,31 +43,80 @@ export default function TicketsScreen({ navigation }) {
   );
 
   const grupos = useMemo(() => {
-    const mios = tickets.filter((t) =>
-      esSoporte ? t.tecnico_id === usuarioId : t.reportante_id === usuarioId
-    );
-    return {
-      pendientes: tickets.filter((t) => ACTIVOS.includes(t.estado)),
-      sin_asignar: tickets.filter((t) => !t.tecnico_id && ACTIVOS.includes(t.estado)),
-      mios,
-      vencidos: tickets.filter(
-        (t) => ACTIVOS.includes(t.estado) && new Date(t.vence_at) < new Date()
-      ),
-      resuelto: tickets.filter((t) => ['resuelto'].includes(t.estado)),
-      todos: tickets,
-    };
-  }, [tickets, usuarioId, esSoporte]);
+    const lista = esUsuario ? tickets.filter((t) => t.reportante_id === usuarioId) : tickets;
 
-  const filtros = [
-    { valor: 'pendientes', etiqueta: 'Pendientes', conteo: grupos.pendientes.length },
-    ...(esSoporte
-      ? [{ valor: 'sin_asignar', etiqueta: 'Sin atender', conteo: grupos.sin_asignar.length }]
-      : []),
-    { valor: 'mios', etiqueta: esSoporte ? 'Atiendo yo' : 'Míos', conteo: grupos.mios.length },
-    { valor: 'vencidos', etiqueta: 'Vencidos', conteo: grupos.vencidos.length },
-    { valor: 'resuelto', etiqueta: 'Resueltos', conteo: grupos.resuelto.length },
-    { valor: 'todos', etiqueta: 'Todos', conteo: grupos.todos.length },
-  ];
+    return {
+      todos: lista,
+      sin_asignar: lista.filter((t) => !t.tecnico_id && ACTIVOS.includes(t.estado)),
+      pendientes: lista.filter((t) => ACTIVOS.includes(t.estado)),
+      mios: esTecnico
+        ? tickets.filter((t) => t.tecnico_id === usuarioId)
+        : tickets.filter((t) => t.reportante_id === usuarioId),
+      vencidos: lista.filter((t) => ACTIVOS.includes(t.estado) && new Date(t.vence_at) < new Date()),
+      resueltos: lista.filter((t) => t.estado === 'resuelto'),
+    };
+  }, [tickets, usuarioId, esTecnico, esUsuario]);
+
+  // Cada rol ve los filtros que le sirven; el primero es el de entrada.
+  const filtros = useMemo(() => {
+    if (esAdmin) {
+      return [
+        { valor: 'sin_asignar', etiqueta: 'Por asignar', conteo: grupos.sin_asignar.length },
+        { valor: 'pendientes', etiqueta: 'Activas', conteo: grupos.pendientes.length },
+        { valor: 'vencidos', etiqueta: 'Vencidas', conteo: grupos.vencidos.length },
+        { valor: 'resueltos', etiqueta: 'Resueltas', conteo: grupos.resueltos.length },
+        { valor: 'todos', etiqueta: 'Todas', conteo: grupos.todos.length },
+      ];
+    }
+    if (esTecnico) {
+      return [
+        { valor: 'mios', etiqueta: 'Asignadas a mí', conteo: grupos.mios.length },
+        { valor: 'sin_asignar', etiqueta: 'Sin asignar', conteo: grupos.sin_asignar.length },
+        { valor: 'vencidos', etiqueta: 'Vencidas', conteo: grupos.vencidos.length },
+        { valor: 'resueltos', etiqueta: 'Resueltas', conteo: grupos.resueltos.length },
+        { valor: 'todos', etiqueta: 'Todas', conteo: grupos.todos.length },
+      ];
+    }
+    return [
+      { valor: 'mios', etiqueta: 'Mis solicitudes', conteo: grupos.mios.length },
+      { valor: 'pendientes', etiqueta: 'En atención', conteo: grupos.pendientes.length },
+      { valor: 'resueltos', etiqueta: 'Resueltas', conteo: grupos.resueltos.length },
+    ];
+  }, [esAdmin, esTecnico, grupos]);
+
+  // Un filtro que no existe para este rol (por ejemplo, un usuario que abre
+  // ?filtro=sin_asignar) cae en el filtro de entrada.
+  const filtroPorDefecto = filtros[0].valor;
+  const filtro = filtros.some((f) => f.valor === route.params?.filtro)
+    ? route.params.filtro
+    : filtroPorDefecto;
+
+  const cambiarFiltro = (valor) =>
+    navigation.setParams({ filtro: valor === filtroPorDefecto ? undefined : valor });
+
+  // La búsqueda se escribe en la dirección un momento después de dejar de teclear.
+  // `escritaAqui` recuerda lo último que esta pantalla puso en la dirección, para
+  // no confundir ese cambio con uno que llega desde afuera.
+  const escritaAqui = useRef(buscarEnRuta);
+
+  useEffect(() => {
+    const q = busqueda.trim();
+    if (q === escritaAqui.current) return undefined;
+
+    const espera = setTimeout(() => {
+      escritaAqui.current = q;
+      navigation.setParams({ buscar: q || undefined });
+    }, PAUSA_BUSQUEDA_MS);
+    return () => clearTimeout(espera);
+  }, [busqueda, navigation]);
+
+  // Si la dirección cambia desde afuera (un enlace, el botón atrás), el campo la sigue.
+  useEffect(() => {
+    if (buscarEnRuta !== escritaAqui.current) {
+      escritaAqui.current = buscarEnRuta;
+      setBusqueda(buscarEnRuta);
+    }
+  }, [buscarEnRuta]);
 
   const visibles = useMemo(() => {
     const base = grupos[filtro] ?? [];
@@ -109,7 +165,7 @@ export default function TicketsScreen({ navigation }) {
           onChangeText={setBusqueda}
           placeholder="Buscar por código, título o ambiente…"
         />
-        <Segmentado opciones={filtros} valor={filtro} onChange={setFiltro} />
+        <Segmentado opciones={filtros} valor={filtro} onChange={cambiarFiltro} />
       </View>
 
       <Aviso texto={error} />
@@ -125,15 +181,7 @@ export default function TicketsScreen({ navigation }) {
           icono={busqueda ? 'buscar' : 'bandeja'}
         />
       ) : (
-        visibles.map((ticket) => (
-          <TarjetaTicket
-            key={ticket.id}
-            ticket={ticket}
-            onPress={() =>
-              navigation.navigate('TicketDetalle', { id: ticket.id, codigo: ticket.codigo })
-            }
-          />
-        ))
+        visibles.map((ticket) => <TarjetaTicket key={ticket.id} ticket={ticket} />)
       )}
     </Pantalla>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLinkProps } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { configurado } from '../lib/supabase';
 import { traducirError } from '../lib/errores';
@@ -13,9 +14,11 @@ const VENTAJAS = [
   { icono: 'pulso', texto: 'Indicadores reales del servicio de soporte' },
 ];
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
   const { entrar, entrarDemo, reenviarVerificacion, caducada, diasSesion } = useAuth();
   const escritorio = useEscritorio();
+  const enlaceRecuperar = useLinkProps({ screen: 'RecuperarClave' });
+  const enlaceRegistro = useLinkProps({ screen: 'Registro' });
 
   const [correo, setCorreo] = useState('');
   const [clave, setClave] = useState('');
@@ -143,10 +146,7 @@ export default function LoginScreen({ navigation }) {
             />
 
             <View style={{ alignItems: 'flex-end', marginTop: -4, marginBottom: s.lg }}>
-              <Pressable
-                onPress={() => navigation.navigate('RecuperarClave')}
-                hitSlop={8}
-              >
+              <Pressable {...enlaceRecuperar} hitSlop={8}>
                 <Text style={{ ...t.pequeno, color: c.marcaAlta, fontWeight: '600' }}>
                   ¿Olvidaste tu contraseña?
                 </Text>
@@ -174,7 +174,7 @@ export default function LoginScreen({ navigation }) {
 
             <View style={a.pie}>
               <Text style={[t.pequeno, { color: c.textoTenue }]}>¿Todavía no tienes cuenta?</Text>
-              <Pressable onPress={() => navigation.navigate('Registro')} hitSlop={6}>
+              <Pressable {...enlaceRegistro} hitSlop={6}>
                 <Text style={a.enlace}>Crear una</Text>
               </Pressable>
             </View>
