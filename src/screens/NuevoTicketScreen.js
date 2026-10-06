@@ -8,7 +8,7 @@ import { Aviso, Boton, Campo, Encabezado, Panel, Rotulo } from '../components/ui
 import { c, PRIORIDADES, r, s, t } from '../theme';
 
 export default function NuevoTicketScreen({ navigation }) {
-  const { usuarioId } = useAuth();
+  const { usuarioId, organizacion } = useAuth();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
 
@@ -36,7 +36,7 @@ export default function NuevoTicketScreen({ navigation }) {
       return;
     }
     if (!form.ambiente.trim()) {
-      setError('Escribe el ambiente o lugar donde ocurre.');
+      setError('Indica dónde ocurre la falla.');
       return;
     }
 
@@ -71,7 +71,7 @@ export default function NuevoTicketScreen({ navigation }) {
         <Encabezado
           rotulo="Reporte"
           titulo="Nueva solicitud"
-          descripcion="Describe la novedad del ambiente para asignarle atención inmediata."
+          descripcion="Cuenta qué está fallando y dónde, para asignarle un responsable."
           volver={() => volver(navigation, 'Tabs', { screen: 'Tickets' })}
         />
 
@@ -82,7 +82,7 @@ export default function NuevoTicketScreen({ navigation }) {
             etiqueta="¿Qué está fallando?"
             valor={form.titulo}
             onChangeText={set('titulo')}
-            placeholder="El videobeam no proyecta"
+            placeholder="El proyector no muestra imagen"
             contador={120}
           />
 
@@ -90,7 +90,7 @@ export default function NuevoTicketScreen({ navigation }) {
             etiqueta="Descripción"
             valor={form.descripcion}
             onChangeText={set('descripcion')}
-            placeholder="Enciende pero la imagen se ve azul. Ya probamos con otro cable HDMI."
+            placeholder="Enciende pero la imagen se ve azul. Ya probamos con otro cable."
             multilinea
             ayuda="Cuenta qué pasó, desde cuándo y qué ya intentaste."
           />
@@ -99,16 +99,17 @@ export default function NuevoTicketScreen({ navigation }) {
             etiqueta="Tipo de problema o falla"
             valor={form.categoria}
             onChangeText={set('categoria')}
-            placeholder="Ej: Red e internet, Videobeam, Software, Electricidad..."
+            placeholder="Ej: Red e internet, Software, Electricidad..."
             ayuda="Escribe el tipo de problema que se presenta."
           />
 
+          {/* Cómo se llaman los lugares lo define el tipo de organización */}
           <Campo
-            etiqueta="Ambiente o ubicación"
+            etiqueta={organizacion.lugar.singular}
             valor={form.ambiente}
             onChangeText={set('ambiente')}
-            placeholder="Ej: A-101, Laboratorio de redes, Sala 2..."
-            ayuda="Escribe el código o nombre del ambiente de formación."
+            placeholder={`Ej: ${organizacion.lugares[0].codigo}, ${organizacion.lugares[1].nombre}...`}
+            ayuda="Escribe el código o el nombre del lugar donde ocurre."
           />
 
           <Rotulo color={c.textoSuave} estilo={{ marginBottom: s.sm }}>

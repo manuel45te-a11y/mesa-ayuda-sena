@@ -79,7 +79,7 @@ export function Boton({
   const inactivo = deshabilitado || cargando;
 
   const paleta = {
-    primario: { fondo: c.marca, borde: c.marca, texto: '#FFFFFF' },
+    primario: { fondo: c.marca, borde: c.marca, texto: c.marcaTexto },
     secundario: { fondo: c.panelAlto, borde: c.lineaFuerte, texto: c.texto },
     fantasma: { fondo: 'transparent', borde: 'transparent', texto: c.textoSuave },
     peligro: { fondo: c.rojoBajo, borde: c.rojo, texto: c.rojo },
@@ -238,7 +238,7 @@ export function Segmentado({ opciones, valor, onChange }) {
   );
 }
 
-// Rejilla de opciones para catálogos largos (categorías, ambientes).
+// Rejilla de opciones para catálogos largos (categorías, lugares).
 export function Opciones({ etiqueta, opciones, valor, onChange, ayuda, columnas = 2 }) {
   return (
     <View style={{ marginBottom: s.lg }}>

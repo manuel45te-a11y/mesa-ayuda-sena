@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Circle, Rect, Line, Polyline, Defs, Stop, Text as SvgText } from 'react-native-svg';
+import { CONFIG } from '../config/organizacion';
 import { c, mono } from '../theme';
 
 // Trazos dibujados a mano sobre una retícula de 24, grosor uniforme de 1.6
@@ -165,9 +166,30 @@ export default function Icono({ nombre, tamano = 20, color = c.textoSuave, groso
   );
 }
 
-// Isotipo oficial/institucional de la aplicación: badge verde SENA con silueta estilizada
+// Marca de la app: un salvavidas, el símbolo de "aquí te ayudan", sobre el
+// color de la organización. Si se configuró EXPO_PUBLIC_LOGO_URL se muestra
+// ese logo en su lugar.
 export function Logotipo({ tamano = 40 }) {
   const radio = Math.round(tamano * 0.26);
+
+  if (CONFIG.logo) {
+    return (
+      <Image
+        source={{ uri: CONFIG.logo }}
+        style={{ width: tamano, height: tamano, borderRadius: radio }}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+      />
+    );
+  }
+
+  const trazo = {
+    stroke: c.marcaTexto,
+    strokeWidth: 2.1,
+    strokeLinecap: 'round',
+    fill: 'none',
+  };
+
   return (
     <View
       style={[
@@ -180,15 +202,12 @@ export function Logotipo({ tamano = 40 }) {
       ]}
     >
       <Svg width={tamano * 0.62} height={tamano * 0.62} viewBox="0 0 24 24">
-        <Circle cx="12" cy="4.2" r="2.2" fill="#FFFFFF" />
-        <Path
-          d="M12 8.5v11.5M5.5 13l6.5-4.5 6.5 4.5M7 19.5l5-5.5 5 5.5"
-          stroke="#FFFFFF"
-          strokeWidth="2.1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
+        <Circle cx="12" cy="12" r="9" {...trazo} />
+        <Circle cx="12" cy="12" r="4" {...trazo} />
+        <Line x1="4.9" y1="4.9" x2="9.2" y2="9.2" {...trazo} />
+        <Line x1="14.8" y1="14.8" x2="19.1" y2="19.1" {...trazo} />
+        <Line x1="14.8" y1="9.2" x2="19.1" y2="4.9" {...trazo} />
+        <Line x1="4.9" y1="19.1" x2="9.2" y2="14.8" {...trazo} />
       </Svg>
     </View>
   );

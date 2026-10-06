@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Mesa de Ayuda",
-    "slug": "mesa-ayuda-sena",
+    "slug": "mesa-ayuda",
     "scheme": "mesaayuda",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "backgroundColor": "#0B0F14",
     "newArchEnabled": true,
     "splash": {
@@ -17,7 +17,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.sena.mesaayuda",
+      "package": "com.mesaayuda.app",
       "adaptiveIcon": {
         "backgroundColor": "#0B0F14"
       }

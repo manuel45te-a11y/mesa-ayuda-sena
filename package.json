@@ -1,7 +1,7 @@
 {
-  "name": "mesa-ayuda-sena",
+  "name": "mesa-ayuda",
   "version": "1.0.0",
-  "description": "Sistema de mesa de ayuda para ambientes de formacion - Proyecto formativo SENA",
+  "description": "Mesa de ayuda para reportar y atender fallas, adaptable a cualquier organizacion",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",

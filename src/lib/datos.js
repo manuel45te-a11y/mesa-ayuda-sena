@@ -23,7 +23,7 @@ async function cambiarFila(tabla, id, cambios) {
 
 export async function catalogos() {
   if (demo.esDemo()) {
-    return { categorias: demo.CATEGORIAS, ambientes: demo.AMBIENTES, error: null };
+    return { categorias: demo.CATEGORIAS, ambientes: demo.lugares(), error: null };
   }
 
   const [cat, amb] = await Promise.all([

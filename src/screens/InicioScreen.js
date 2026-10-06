@@ -121,7 +121,7 @@ export default function InicioScreen({ navigation }) {
       {recientes.length === 0 ? (
         <Vacio
           titulo="Todavía no hay solicitudes"
-          detalle="Cuando se registre una solicitud en un ambiente, aparecerá en esta lista."
+          detalle="Cuando alguien registre una solicitud, aparecerá en esta lista."
           accion={
             <Boton
               titulo="Registrar la primera"

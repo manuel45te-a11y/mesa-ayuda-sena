@@ -8,7 +8,7 @@ import Icono, { Logotipo } from '../components/Icono';
 import { c, r, s, t } from '../theme';
 
 export default function RegistroScreen({ navigation }) {
-  const { registrar, reenviarVerificacion } = useAuth();
+  const { registrar, reenviarVerificacion, organizacion } = useAuth();
   const [datos, setDatos] = useState({
     nombre: '',
     correo: '',
@@ -157,22 +157,17 @@ export default function RegistroScreen({ navigation }) {
               teclado="phone-pad"
             />
 
-            <Campo
-              etiqueta="Número de ficha"
-              valor={datos.ficha}
-              onChangeText={set('ficha')}
-              placeholder="Ej: 2758412"
-              teclado="numeric"
-              ayuda="Escribe tu número de ficha SAR."
-            />
-
-            <Campo
-              etiqueta="Programa de formación"
-              valor={datos.programa}
-              onChangeText={set('programa')}
-              placeholder="Ej: Análisis y Desarrollo de Software"
-              ayuda="Escribe el nombre del programa al que perteneces."
-            />
+            {/* Estos dos datos cambian según el tipo de organización: área y
+                cargo, programa y grupo, servicio… (ver config/organizacion.js) */}
+            {organizacion.campos.map((campo) => (
+              <Campo
+                key={campo.campo}
+                etiqueta={campo.etiqueta}
+                valor={datos[campo.campo]}
+                onChangeText={set(campo.campo)}
+                placeholder={`Ej: ${campo.ejemplo}`}
+              />
+            ))}
 
             <Boton titulo="Crear cuenta" onPress={onRegistrar} cargando={cargando} ancho />
           </View>

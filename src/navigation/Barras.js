@@ -51,16 +51,20 @@ const ROLES_DEMO = [
 //  Barra lateral (pantallas anchas)
 // ---------------------------------------------------------------------------
 export function BarraLateral({ state, navigation }) {
-  const { perfil, salir, demo, cambiarRolDemo } = useAuth();
+  const { perfil, salir, demo, cambiarRolDemo, organizacion } = useAuth();
   const pestanas = usePestanas(state, navigation);
 
   return (
     <View style={b.lateral}>
       <View style={b.marca}>
         <Logotipo tamano={34} />
-        <View>
-          <Text style={b.marcaNombre}>Mesa de Ayuda</Text>
-          <Text style={b.marcaPie}>Ambientes de formación</Text>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={b.marcaNombre} numberOfLines={1}>
+            {organizacion.producto}
+          </Text>
+          <Text style={b.marcaPie} numberOfLines={1}>
+            {organizacion.pie}
+          </Text>
         </View>
       </View>
 

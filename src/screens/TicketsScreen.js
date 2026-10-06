@@ -15,7 +15,7 @@ const ACTIVOS = ['pendiente', 'en_proceso'];
 const PAUSA_BUSQUEDA_MS = 350;
 
 export default function TicketsScreen({ navigation, route }) {
-  const { usuarioId, esAdmin, esTecnico, esUsuario } = useAuth();
+  const { usuarioId, esAdmin, esTecnico, esUsuario, organizacion } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [refrescando, setRefrescando] = useState(false);
@@ -163,7 +163,7 @@ export default function TicketsScreen({ navigation, route }) {
         <Buscador
           valor={busqueda}
           onChangeText={setBusqueda}
-          placeholder="Buscar por código, título o ambiente…"
+          placeholder={`Buscar por código, título o ${organizacion.lugar.singular.toLowerCase()}…`}
         />
         <Segmentado opciones={filtros} valor={filtro} onChange={cambiarFiltro} />
       </View>
@@ -175,7 +175,7 @@ export default function TicketsScreen({ navigation, route }) {
           titulo={busqueda ? 'Ninguna solicitud coincide con la búsqueda' : 'No hay solicitudes en este filtro'}
           detalle={
             busqueda
-              ? 'Prueba con el código de la solicitud o el nombre del ambiente.'
+              ? 'Prueba con el código de la solicitud, una palabra del título o el lugar.'
               : 'Cuando se registre una solicitud que puedas ver, aparecerá aquí.'
           }
           icono={busqueda ? 'buscar' : 'bandeja'}

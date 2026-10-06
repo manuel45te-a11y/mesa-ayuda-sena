@@ -7,8 +7,11 @@ import {
   desactivarDemo,
   esDemo,
   obtenerPerfilDemo,
+  obtenerTipoDemo,
   restaurarDemo,
+  usarTipoDemo,
 } from '../lib/demo';
+import { datosOrganizacion } from '../config/organizacion';
 import { DIAS_SESION, limpiarInicio, marcarInicioSiFalta, sesionVencida } from '../lib/sesion';
 
 const CLAVE_MODO_DEMO = '@mesa_ayuda_modo_demo';
@@ -22,11 +25,12 @@ export function AuthProvider({ children }) {
   const [perfil, setPerfil] = useState(null);
   const [demo, setDemo] = useState(false);
   const [demoTick, setDemoTick] = useState(0);
+  const [tipoDemo, setTipoDemo] = useState(obtenerTipoDemo());
   const [cargando, setCargando] = useState(true);
   const [caducada, setCaducada] = useState(false);
   const [recuperandoClave, setRecuperandoClave] = useState(false);
 
-  // Trae el perfil (rol, nombre, ficha) del usuario autenticado.
+  // Trae el perfil (rol, nombre y datos de contacto) del usuario autenticado.
   async function cargarPerfil(userId) {
     if (!userId) {
       setPerfil(null);
@@ -93,8 +97,12 @@ export function AuthProvider({ children }) {
           modoDemoGuardado = await AsyncStorage.getItem(CLAVE_MODO_DEMO);
         }
         if (modoDemoGuardado === 'true') {
-          await restaurarDemo();
-          if (activo) setDemo(true);
+          // Si lo guardado es de una versión anterior, se arma otra vez.
+          if (!(await restaurarDemo())) activarDemo();
+          if (activo) {
+            setTipoDemo(obtenerTipoDemo());
+            setDemo(true);
+          }
         }
       } catch {}
 
@@ -155,6 +163,11 @@ export function AuthProvider({ children }) {
       esTecnico: rol === 'tecnico',
       esUsuario: rol === 'aprendiz',
 
+      // Cómo se llama la organización, cómo se llaman sus lugares y qué datos
+      // pide al registrarse. Lo usan las pantallas para nombrar las cosas.
+      organizacion: datosOrganizacion({ tipo: demo ? tipoDemo : undefined, demo }),
+      tipoDemo,
+
       // En modo demostración cambia de perfil al instante para probar los tres roles.
       cambiarRolDemo(nuevoRol) {
         const p = cambiarRolDemoFn(nuevoRol);
@@ -162,11 +175,18 @@ export function AuthProvider({ children }) {
         return p;
       },
 
+      // En modo demostración cambia el tipo de organización, para ver cómo se
+      // adapta la app sin configurar nada.
+      cambiarTipoDemo(nuevoTipo) {
+        setTipoDemo(usarTipoDemo(nuevoTipo));
+        setDemoTick((t) => t + 1);
+      },
+
       // Devuelve { error, requiereConfirmacion }. Cuando el proyecto exige
       // verificar el correo, Supabase no abre sesión: manda un enlace y deja
       // la cuenta esperando.
-      // No se envía rol: toda cuenta nace como Usuario / Aprendiz (lo asegura la
-      // base de datos) y el administrador asigna los demás roles.
+      // No se envía rol: toda cuenta nace como Usuario (lo asegura la base de
+      // datos) y el administrador asigna los demás roles.
       async registrar({ correo, clave, nombre, ficha, programa, telefono }) {
         const { data, error } = await supabase.auth.signUp({
           email: correo.trim(),
@@ -226,6 +246,7 @@ export function AuthProvider({ children }) {
           await AsyncStorage.setItem(CLAVE_MODO_DEMO, 'true');
         } catch {}
         activarDemo();
+        setTipoDemo(obtenerTipoDemo());
         setDemo(true);
       },
 
@@ -250,7 +271,7 @@ export function AuthProvider({ children }) {
         await cargarPerfil(sesion?.user?.id);
       },
     }),
-    [sesion, perfilActivo, cargando, demo, caducada, recuperandoClave, demoTick]
+    [sesion, perfilActivo, cargando, demo, caducada, recuperandoClave, demoTick, tipoDemo]
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;

@@ -15,7 +15,7 @@ const VENTAJAS = [
 ];
 
 export default function LoginScreen() {
-  const { entrar, entrarDemo, reenviarVerificacion, caducada, diasSesion } = useAuth();
+  const { entrar, entrarDemo, reenviarVerificacion, caducada, diasSesion, organizacion } = useAuth();
   const escritorio = useEscritorio();
   const enlaceRecuperar = useLinkProps({ screen: 'RecuperarClave' });
   const enlaceRegistro = useLinkProps({ screen: 'Registro' });
@@ -66,10 +66,13 @@ export default function LoginScreen() {
           {escritorio && (
             <View style={a.presentacion}>
               <Logotipo tamano={46} />
-              <Text style={a.presentacionTitulo}>El soporte del centro, ordenado</Text>
+              {!!organizacion.nombre && (
+                <Rotulo estilo={{ marginTop: s.lg }}>{organizacion.nombre}</Rotulo>
+              )}
+              <Text style={a.presentacionTitulo}>El soporte, en un solo lugar</Text>
               <Text style={a.presentacionTexto}>
-                Un solo lugar para reportar las fallas de los ambientes, asignarles responsable
-                y saber cuánto se tarda en resolverlas.
+                Reporta las fallas, asígnalas a un responsable y mira cuánto se tarda en
+                resolverlas.
               </Text>
 
               <View style={{ gap: s.md, marginTop: s.xl }}>
@@ -90,9 +93,13 @@ export default function LoginScreen() {
             {!escritorio && (
               <View style={a.marcaMovil}>
                 <Logotipo tamano={38} />
-                <View>
-                  <Text style={a.marcaNombre}>Mesa de Ayuda</Text>
-                  <Text style={a.marcaPie}>Ambientes de formación</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={a.marcaNombre} numberOfLines={1}>
+                    {organizacion.producto}
+                  </Text>
+                  <Text style={a.marcaPie} numberOfLines={1}>
+                    {organizacion.pie}
+                  </Text>
                 </View>
               </View>
             )}

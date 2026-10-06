@@ -117,7 +117,7 @@ export default function UsuariosScreen() {
       <Encabezado
         rotulo="Administración"
         titulo="Usuarios"
-        descripcion="Asigna el rol de cada persona. Las cuentas nuevas llegan como Usuario / Aprendiz."
+        descripcion="Asigna el rol de cada persona. Las cuentas nuevas llegan como Usuario."
       />
 
       <Aviso texto={error} />

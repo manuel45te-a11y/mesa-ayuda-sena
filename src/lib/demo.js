@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FOTOS_EJEMPLO } from './fotosEjemplo';
+import { CONFIG, TIPOS } from '../config/organizacion';
 
 // ============================================================================
 //  MODO DEMOSTRACIÓN
@@ -7,6 +8,10 @@ import { FOTOS_EJEMPLO } from './fotosEjemplo';
 //  datos, incluidas sus reglas: quién asigna, quién sube evidencias, que no
 //  se cierra sin evidencia, etc. Así la demostración se comporta igual que la
 //  app conectada a Supabase.
+//
+//  Los lugares y los datos de cada persona salen del tipo de organización
+//  (ver config/organizacion.js), así que al cambiarlo desde Perfil la
+//  demostración se adapta: una empresa, un colegio, una clínica o un hotel.
 // ============================================================================
 
 const CLAVE_TICKETS = '@mesa_ayuda_demo_tickets';
@@ -15,8 +20,17 @@ const CLAVE_ADJUNTOS = '@mesa_ayuda_demo_adjuntos';
 const CLAVE_USUARIOS = '@mesa_ayuda_demo_usuarios';
 const CLAVE_CONSECUTIVO = '@mesa_ayuda_demo_consecutivo';
 const CLAVE_ROL_ACTIVO = '@mesa_ayuda_demo_rol_activo';
+const CLAVE_TIPO = '@mesa_ayuda_demo_tipo';
 
-const CLAVES = [CLAVE_TICKETS, CLAVE_EVENTOS, CLAVE_ADJUNTOS, CLAVE_USUARIOS, CLAVE_CONSECUTIVO, CLAVE_ROL_ACTIVO];
+const CLAVES = [
+  CLAVE_TICKETS,
+  CLAVE_EVENTOS,
+  CLAVE_ADJUNTOS,
+  CLAVE_USUARIOS,
+  CLAVE_CONSECUTIVO,
+  CLAVE_ROL_ACTIVO,
+  CLAVE_TIPO,
+];
 
 let activo = false;
 export const esDemo = () => activo;
@@ -26,11 +40,9 @@ export const esDemo = () => activo;
 const PERSONAS = [
   {
     id: 'demo-admin',
-    nombre: 'Admin Coordinador',
-    correo: 'coordinacion@demo.local',
+    nombre: 'Andrea Salazar',
+    correo: 'andrea.salazar@demo.local',
     rol: 'admin',
-    ficha: null,
-    programa: 'Coordinación de TIC y ambientes',
     telefono: '310 555 0101',
   },
   {
@@ -39,8 +51,6 @@ const PERSONAS = [
     correo: 'carlos.rios@demo.local',
     rol: 'tecnico',
     especialidad: 'Redes y equipos',
-    ficha: null,
-    programa: 'Soporte e infraestructura TI',
     telefono: '310 555 0102',
   },
   {
@@ -48,8 +58,6 @@ const PERSONAS = [
     nombre: 'María Gómez',
     correo: 'maria.gomez@demo.local',
     rol: 'aprendiz',
-    ficha: '2758412',
-    programa: 'Análisis y Desarrollo de Software',
     telefono: '310 555 0103',
   },
   {
@@ -58,8 +66,6 @@ const PERSONAS = [
     correo: 'laura.gomez@demo.local',
     rol: 'tecnico',
     especialidad: 'Audiovisuales y conectividad',
-    ficha: null,
-    programa: null,
     telefono: '310 555 0104',
   },
   {
@@ -68,11 +74,33 @@ const PERSONAS = [
     correo: 'david.torres@demo.local',
     rol: 'tecnico',
     especialidad: 'Sistemas y climatización',
-    ficha: null,
-    programa: null,
     telefono: '310 555 0105',
   },
 ];
+
+// Los dos datos extra del perfil cambian con el tipo de organización: en una
+// empresa son área y cargo; en un colegio, programa y grupo. En la base de
+// datos las columnas se siguen llamando programa y ficha.
+const DATOS_POR_TIPO = {
+  empresa: {
+    'demo-admin': { programa: 'Tecnología', ficha: 'Jefe de soporte' },
+    'demo-tecnico-1': { programa: 'Tecnología', ficha: 'Técnico de soporte' },
+    'demo-usuario-1': { programa: 'Contabilidad', ficha: 'Auxiliar contable' },
+  },
+  educacion: {
+    'demo-usuario-1': { programa: 'Técnico en sistemas', ficha: '2B' },
+  },
+  salud: {
+    'demo-admin': { programa: 'Sistemas', ficha: 'Jefe de sistemas' },
+    'demo-tecnico-1': { programa: 'Sistemas', ficha: 'Técnico de sistemas' },
+    'demo-usuario-1': { programa: 'Facturación', ficha: 'Auxiliar de facturación' },
+  },
+  hotel: {
+    'demo-admin': { programa: 'Mantenimiento', ficha: 'Jefe de mantenimiento' },
+    'demo-tecnico-1': { programa: 'Mantenimiento', ficha: 'Técnico de mantenimiento' },
+    'demo-usuario-1': { programa: 'Recepción', ficha: 'Recepcionista' },
+  },
+};
 
 // Perfil con el que se entra para cada rol del selector. Su rol no se puede
 // cambiar desde la pantalla Usuarios: se cambia con el selector.
@@ -81,23 +109,12 @@ export const ROLES_DEMO = Object.keys(IDENTIDADES);
 
 export const CATEGORIAS = [
   { id: 'c1', nombre: 'Red e internet', sla_horas: 4 },
-  { id: 'c2', nombre: 'Equipos de computo', sla_horas: 8 },
-  { id: 'c3', nombre: 'Video y proyeccion', sla_horas: 6 },
-  { id: 'c4', nombre: 'Software', sla_horas: 24 },
-  { id: 'c5', nombre: 'Electrico', sla_horas: 4 },
+  { id: 'c2', nombre: 'Computadores e impresoras', sla_horas: 8 },
+  { id: 'c3', nombre: 'Audio y video', sla_horas: 6 },
+  { id: 'c4', nombre: 'Software y accesos', sla_horas: 24 },
+  { id: 'c5', nombre: 'Electricidad', sla_horas: 4 },
   { id: 'c6', nombre: 'Mobiliario', sla_horas: 48 },
-  { id: 'c7', nombre: 'Climatizacion', sla_horas: 24 },
-];
-
-export const AMBIENTES = [
-  { id: 'a1', codigo: 'A-101', nombre: 'Sala de sistemas 1' },
-  { id: 'a2', codigo: 'A-102', nombre: 'Sala de sistemas 2' },
-  { id: 'a3', codigo: 'A-201', nombre: 'Aula multiple' },
-  { id: 'a4', codigo: 'B-101', nombre: 'Laboratorio de redes' },
-  { id: 'a5', codigo: 'B-102', nombre: 'Taller de mantenimiento' },
-  { id: 'a6', codigo: 'B-203', nombre: 'Sala de diseno' },
-  { id: 'a7', codigo: 'C-101', nombre: 'Biblioteca' },
-  { id: 'a8', codigo: 'C-102', nombre: 'Auditorio' },
+  { id: 'c7', nombre: 'Aire acondicionado', sla_horas: 24 },
 ];
 
 export const ACTIVOS = ['pendiente', 'en_proceso'];
@@ -108,6 +125,36 @@ let adjuntos = [];
 let usuarios = PERSONAS.map((p) => ({ ...p }));
 let consecutivo = 0;
 let rolActivo = 'admin';
+let tipoActual = CONFIG.tipo;
+
+// Los lugares del tipo de organización elegido, con un id estable (a1, a2…)
+// para que las solicitudes ya creadas sigan apuntando al mismo sitio.
+export const lugares = () =>
+  TIPOS[tipoActual].lugares.map((lugar, i) => ({ id: `a${i + 1}`, ...lugar }));
+
+const lugarPorId = (id) => lugares().find((x) => x.id === id) ?? null;
+
+export const obtenerTipoDemo = () => tipoActual;
+
+// Copia en las personas de ejemplo los dos datos extra del tipo elegido.
+function aplicarDatosDelTipo() {
+  const datos = DATOS_POR_TIPO[tipoActual] ?? {};
+  usuarios.forEach((u) => {
+    u.programa = datos[u.id]?.programa ?? null;
+    u.ficha = datos[u.id]?.ficha ?? null;
+  });
+}
+
+// Cambia el tipo de organización sin perder las solicitudes: solo cambian los
+// nombres de los lugares y los datos de las personas.
+export function usarTipoDemo(tipo) {
+  if (TIPOS[tipo] && tipo !== tipoActual) {
+    tipoActual = tipo;
+    aplicarDatosDelTipo();
+    persistir();
+  }
+  return tipoActual;
+}
 
 const hace = (horas) => new Date(Date.now() - horas * 3600 * 1000).toISOString();
 
@@ -122,6 +169,7 @@ async function persistir() {
     [CLAVE_USUARIOS, JSON.stringify(usuarios)],
     [CLAVE_CONSECUTIVO, String(consecutivo)],
     [CLAVE_ROL_ACTIVO, rolActivo],
+    [CLAVE_TIPO, tipoActual],
   ];
   try {
     if (typeof window !== 'undefined' && window?.localStorage) {
@@ -146,13 +194,16 @@ export async function restaurarDemo() {
       valores = Object.fromEntries(pares);
     }
 
-    if (valores[CLAVE_TICKETS]) {
+    // Sin el tipo guardado son datos de una versión anterior de la app: se
+    // descartan y se vuelve a armar la demostración desde cero.
+    if (valores[CLAVE_TICKETS] && TIPOS[valores[CLAVE_TIPO]]) {
       tickets = JSON.parse(valores[CLAVE_TICKETS]);
       if (valores[CLAVE_EVENTOS]) eventos = JSON.parse(valores[CLAVE_EVENTOS]);
       if (valores[CLAVE_ADJUNTOS]) adjuntos = JSON.parse(valores[CLAVE_ADJUNTOS]);
       if (valores[CLAVE_USUARIOS]) usuarios = JSON.parse(valores[CLAVE_USUARIOS]);
       if (valores[CLAVE_CONSECUTIVO]) consecutivo = Number(valores[CLAVE_CONSECUTIVO]);
       if (IDENTIDADES[valores[CLAVE_ROL_ACTIVO]]) rolActivo = valores[CLAVE_ROL_ACTIVO];
+      tipoActual = valores[CLAVE_TIPO];
       activo = true;
       return true;
     }
@@ -292,7 +343,7 @@ function crear({
   const catEncontrada = CATEGORIAS.find(
     (x) => x.id === categoria_id || (catTexto && x.nombre.toLowerCase() === catTexto.toLowerCase())
   );
-  const ambEncontrado = AMBIENTES.find(
+  const ambEncontrado = lugares().find(
     (x) =>
       x.id === ambiente_id ||
       (ambTexto &&
@@ -303,7 +354,9 @@ function crear({
   const finalCatId = catEncontrada?.id ?? (catTexto ? 'c1' : categoria_id ?? 'c1');
   const finalAmbId = ambEncontrado?.id ?? (ambTexto ? 'a1' : ambiente_id ?? 'a1');
   const finalCatNombre = catTexto || catEncontrada?.nombre || 'General';
-  const finalAmbCodigo = ambTexto || ambEncontrado?.codigo || 'Ambiente';
+  // El lugar solo se guarda cuando se escribió a mano y no está en el
+  // catálogo. Si está, se resuelve al mostrarlo, así sigue al tipo elegido.
+  const ambEscrito = ambEncontrado ? null : ambTexto;
 
   const creado_at = hace(horasAtras);
   const autor = persona(reportante_id) ?? obtenerPerfilDemo();
@@ -316,7 +369,7 @@ function crear({
     categoria_id: finalCatId,
     ambiente_id: finalAmbId,
     categoria_nombre: finalCatNombre,
-    ambiente_codigo: finalAmbCodigo,
+    ambiente_codigo: ambEscrito,
     prioridad,
     estado: 'pendiente',
     reportante_id: autor.id,
@@ -368,41 +421,43 @@ function reiniciar() {
   usuarios = PERSONAS.map((p) => ({ ...p }));
   consecutivo = 0;
   rolActivo = 'admin';
+  tipoActual = CONFIG.tipo;
+  aplicarDatosDelTipo();
 
   const admin = persona('demo-admin');
   const carlos = persona('demo-tecnico-1');
-  const aprendiz = 'demo-usuario-1';
+  const usuario = 'demo-usuario-1';
 
   // 1. Pendiente y vencido (sin asignar)
   crear({
-    titulo: 'El videobeam no proyecta',
-    descripcion: 'Enciende pero la imagen se ve azul. Probamos con otro cable HDMI y sigue igual.',
+    titulo: 'El proyector no muestra imagen',
+    descripcion: 'Enciende pero la imagen se ve azul. Ya probamos con otro cable HDMI y sigue igual.',
     categoria_id: 'c3',
     ambiente_id: 'a1',
     prioridad: 'alta',
-    reportante_id: aprendiz,
+    reportante_id: usuario,
     horasAtras: 9,
   });
 
   // 2. Pendiente y dentro del plazo (sin asignar)
   crear({
-    titulo: 'Sin internet en el laboratorio de redes',
-    descripcion: 'Ningún equipo del ambiente tiene conexión. El switch tiene las luces apagadas.',
+    titulo: 'No hay conexión a internet',
+    descripcion: 'Ningún computador tiene conexión. El equipo de red tiene las luces apagadas.',
     categoria_id: 'c1',
     ambiente_id: 'a4',
     prioridad: 'alta',
-    reportante_id: aprendiz,
+    reportante_id: usuario,
     horasAtras: 0.4,
   });
 
   // 3. En proceso, asignado a Carlos Ríos
   const enProceso = crear({
-    titulo: 'El equipo 12 no enciende',
+    titulo: 'Un computador no enciende',
     descripcion: 'Al presionar el botón no da señal de vida. Ya se revisó que el cable de poder esté bien.',
     categoria_id: 'c2',
     ambiente_id: 'a2',
     prioridad: 'media',
-    reportante_id: aprendiz,
+    reportante_id: usuario,
     horasAtras: 6,
   });
   avanzar(enProceso, { tecnico_id: carlos.id }, admin);
@@ -410,12 +465,12 @@ function reiniciar() {
 
   // 4. Resuelto por Carlos, con su evidencia
   const resuelto = crear({
-    titulo: 'Dos sillas del ambiente están rotas',
-    descripcion: 'Las sillas de los puestos 8 y 9 tienen el espaldar suelto y no se pueden usar.',
+    titulo: 'Dos sillas están rotas',
+    descripcion: 'Tienen el espaldar suelto y no se pueden usar.',
     categoria_id: 'c6',
     ambiente_id: 'a6',
     prioridad: 'baja',
-    reportante_id: aprendiz,
+    reportante_id: usuario,
     horasAtras: 72,
   });
   avanzar(resuelto, { tecnico_id: carlos.id }, admin);
@@ -436,7 +491,7 @@ function reiniciar() {
     categoria_id: 'c7',
     ambiente_id: 'a7',
     prioridad: 'media',
-    reportante_id: aprendiz,
+    reportante_id: usuario,
     horasAtras: 20,
   });
   avanzar(clima, { tecnico_id: 'demo-tecnico-2' }, admin);
@@ -444,12 +499,12 @@ function reiniciar() {
 
   // 6. Pendiente, prioridad baja (sin asignar)
   crear({
-    titulo: 'Licencia del software de diseño vencida',
+    titulo: 'Licencia del software vencida',
     descripcion: 'Al abrir el programa aparece un aviso de licencia expirada y se cierra solo.',
     categoria_id: 'c4',
-    ambiente_id: 'a6',
+    ambiente_id: 'a2',
     prioridad: 'baja',
-    reportante_id: aprendiz,
+    reportante_id: usuario,
     horasAtras: 6,
   });
 }
@@ -461,17 +516,14 @@ function detalle(t) {
   const horasEntre = (a, b) =>
     a && b ? (new Date(b).getTime() - new Date(a).getTime()) / 3600000 : null;
 
+  const lugar = lugarPorId(t.ambiente_id);
+
   return {
     ...t,
     categoria_nombre:
       t.categoria_nombre || CATEGORIAS.find((x) => x.id === t.categoria_id)?.nombre || 'General',
-    ambiente_codigo:
-      t.ambiente_codigo || AMBIENTES.find((x) => x.id === t.ambiente_id)?.codigo || 'Ambiente',
-    ambiente_nombre:
-      t.ambiente_nombre ||
-      AMBIENTES.find((x) => x.id === t.ambiente_id)?.nombre ||
-      t.ambiente_codigo ||
-      'Ambiente',
+    ambiente_codigo: t.ambiente_codigo || lugar?.codigo || 'Sin lugar',
+    ambiente_nombre: t.ambiente_nombre || t.ambiente_codigo || lugar?.nombre || 'Sin lugar',
     reportante_nombre: nombreDe(t.reportante_id),
     tecnico_nombre: nombreDe(t.tecnico_id),
     horas_respuesta: horasEntre(t.creado_at, t.atendido_at ?? new Date().toISOString()),
@@ -648,7 +700,7 @@ export function indicadores() {
 }
 
 export function porAmbiente() {
-  return AMBIENTES.map((a) => {
+  return lugares().map((a) => {
     const suyos = tickets.filter((t) => t.ambiente_id === a.id);
     return {
       codigo: a.codigo,

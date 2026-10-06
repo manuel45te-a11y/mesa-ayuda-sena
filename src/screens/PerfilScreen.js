@@ -3,8 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { diasRestantes } from '../lib/sesion';
 import Pantalla from '../components/Pantalla';
-import { Boton, Chip, Encabezado, Panel, Rotulo } from '../components/ui';
+import { Boton, Chip, Encabezado, Panel, Rotulo, Separador } from '../components/ui';
 import { Logotipo } from '../components/Icono';
+import { TIPOS } from '../config/organizacion';
 import { c, COLOR_ROLES, r, ROLES, s, t } from '../theme';
 import { fechaCorta, iniciales } from '../lib/formato';
 
@@ -14,8 +15,11 @@ const ROLES_DEMO = [
   { rol: 'admin', texto: 'Administrador' },
 ];
 
+const TIPOS_DEMO = Object.entries(TIPOS).map(([tipo, datos]) => ({ tipo, texto: datos.corto }));
+
 export default function PerfilScreen() {
-  const { perfil, sesion, salir, demo, diasSesion, cambiarRolDemo } = useAuth();
+  const { perfil, sesion, salir, demo, diasSesion, cambiarRolDemo, organizacion, cambiarTipoDemo } =
+    useAuth();
   const rol = COLOR_ROLES[perfil?.rol] ?? COLOR_ROLES.aprendiz;
   const [dias, setDias] = useState(null);
 
@@ -62,14 +66,38 @@ export default function PerfilScreen() {
               </View>
             ))}
           </View>
+
+          <Separador margen={s.lg} />
+
+          <Rotulo color={c.marcaAlta} estilo={{ marginBottom: 6 }}>
+            Tipo de organización
+          </Rotulo>
+          <Text style={[t.pequeno, { color: c.textoSuave, marginBottom: s.md }]}>
+            La misma app sirve en cualquier lugar. Al cambiar el tipo cambian los nombres de los
+            lugares, los datos que se piden al registrarse y los datos de ejemplo.
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: s.sm }}>
+            {TIPOS_DEMO.map((btn) => (
+              <View key={btn.tipo} style={{ flexGrow: 1, flexBasis: 110 }}>
+                <Boton
+                  titulo={btn.texto}
+                  variante={organizacion.tipo === btn.tipo ? 'primario' : 'secundario'}
+                  pequeno
+                  ancho
+                  onPress={() => cambiarTipoDemo(btn.tipo)}
+                />
+              </View>
+            ))}
+          </View>
         </Panel>
       )}
 
       <Panel estilo={{ marginBottom: s.md }}>
         <Rotulo estilo={{ marginBottom: s.md }}>Datos registrados</Rotulo>
         <Dato clave="Correo" valor={perfil?.correo ?? sesion?.user?.email} />
-        <Dato clave="Ficha" valor={perfil?.ficha} />
-        <Dato clave="Programa" valor={perfil?.programa} />
+        {organizacion.campos.map((campo) => (
+          <Dato key={campo.campo} clave={campo.etiqueta} valor={perfil?.[campo.campo]} />
+        ))}
         <Dato clave="Teléfono" valor={perfil?.telefono} />
         <Dato clave="Cuenta creada" valor={fechaCorta(perfil?.creado_at)} ultimo />
       </Panel>
@@ -88,12 +116,12 @@ export default function PerfilScreen() {
 
       <View style={a.pie}>
         <Logotipo tamano={26} />
-        <View>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={[t.pequeno, { color: c.textoSuave, fontWeight: '600' }]}>
-            Mesa de Ayuda · versión 1.0.0
+            {organizacion.producto} · versión 1.0.0
           </Text>
-          <Text style={[t.pequeno, { color: c.textoTenue, fontSize: 11 }]}>
-            Proyecto formativo · Gestión de incidencias en ambientes de formación
+          <Text style={[t.pequeno, { color: c.textoTenue, fontSize: 11 }]} numberOfLines={1}>
+            {organizacion.nombre || organizacion.etiqueta}
           </Text>
         </View>
       </View>

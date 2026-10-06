@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { DarkTheme, NavigationContainer } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -9,7 +9,7 @@ import { Cargando, useEscritorio } from '../components/ui';
 import { conPermiso } from '../components/Protegida';
 import { BarraInferior, BarraLateral } from './Barras';
 import { linking, tituloDocumento } from './rutas';
-import { c } from '../theme';
+import { c, MODO } from '../theme';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegistroScreen from '../screens/RegistroScreen';
@@ -31,10 +31,13 @@ const Tab = createBottomTabNavigator();
 const TableroProtegido = conPermiso('Tablero', DashboardScreen);
 const UsuariosProtegido = conPermiso('Usuarios', UsuariosScreen);
 
+// El tema de la navegación sigue el modo claro u oscuro del dispositivo.
+const temaBase = MODO === 'claro' ? DefaultTheme : DarkTheme;
+
 const tema = {
-  ...DarkTheme,
+  ...temaBase,
   colors: {
-    ...DarkTheme.colors,
+    ...temaBase.colors,
     background: c.fondo,
     card: c.panel,
     border: c.linea,

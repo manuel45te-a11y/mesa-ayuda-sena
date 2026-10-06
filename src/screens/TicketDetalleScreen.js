@@ -38,7 +38,7 @@ export default function TicketDetalleScreen({ route, navigation }) {
   // Se abre por código (/solicitudes/MA-2026-0004). El id se acepta por
   // compatibilidad con navegaciones que todavía lo pasen.
   const { codigo, id } = route.params ?? {};
-  const { usuarioId, esAdmin, esTecnico, demo } = useAuth();
+  const { usuarioId, esAdmin, esTecnico, demo, organizacion } = useAuth();
   const escritorio = useEscritorio();
 
   const [ticket, setTicket] = useState(null);
@@ -240,7 +240,14 @@ export default function TicketDetalleScreen({ route, navigation }) {
             )
           }
         />
-        <Dato clave="Ambiente" valor={`${ticket.ambiente_codigo} · ${ticket.ambiente_nombre}`} />
+        <Dato
+          clave={organizacion.lugar.singular}
+          valor={
+            ticket.ambiente_nombre && ticket.ambiente_nombre !== ticket.ambiente_codigo
+              ? `${ticket.ambiente_codigo} · ${ticket.ambiente_nombre}`
+              : ticket.ambiente_codigo
+          }
+        />
         <Dato clave="Categoría" valor={ticket.categoria_nombre} />
         <Dato clave="Evidencias" valor={String(evidencias.length)} />
         <Dato clave="Reportado" valor={fechaHora(ticket.creado_at)} />

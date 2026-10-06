@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { tablero } from '../lib/datos';
+import { useAuth } from '../context/AuthContext';
 import Pantalla from '../components/Pantalla';
 import { Anillo, Barras, Leyenda } from '../components/Graficos';
 import { Aviso, Cargando, Encabezado, Metrica, Panel, Rotulo, Vacio, useEscritorio } from '../components/ui';
@@ -10,6 +11,7 @@ import { horas } from '../lib/formato';
 
 export default function DashboardScreen() {
   const escritorio = useEscritorio();
+  const { organizacion } = useAuth();
   const [ind, setInd] = useState(null);
   const [ambientes, setAmbientes] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -63,7 +65,7 @@ export default function DashboardScreen() {
       <Encabezado
         rotulo="Indicadores"
         titulo="Rendimiento del servicio"
-        descripcion="Estadísticas de atención y resolución de solicitudes en los ambientes."
+        descripcion="Cómo se están atendiendo y resolviendo las solicitudes."
       />
 
       <Aviso texto={error} />
@@ -139,7 +141,9 @@ export default function DashboardScreen() {
       </View>
 
       <Panel estilo={{ marginTop: s.md }}>
-        <Rotulo estilo={{ marginBottom: s.md }}>Ambientes con más solicitudes</Rotulo>
+        <Rotulo estilo={{ marginBottom: s.md }}>
+          {organizacion.lugar.plural} con más solicitudes
+        </Rotulo>
         {ambientes.length === 0 ? (
           <Vacio titulo="Sin datos todavía" icono="lugar" />
         ) : (
@@ -152,7 +156,7 @@ export default function DashboardScreen() {
           />
         )}
         <Text style={[t.pequeno, { color: c.textoTenue, marginTop: s.md, fontSize: 11 }]}>
-          En ámbar los ambientes que tienen solicitudes pendientes de resolver.
+          En ámbar, donde todavía hay solicitudes sin resolver.
         </Text>
       </Panel>
     </Pantalla>

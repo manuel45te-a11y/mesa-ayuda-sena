@@ -6,10 +6,13 @@ import {
   indicadores,
   insertar,
   listar,
+  lugares,
   modificar,
   obtener,
   obtenerPorCodigo,
+  obtenerTipoDemo,
   porAmbiente,
+  usarTipoDemo,
 } from '../demo';
 
 beforeEach(() => {
@@ -209,5 +212,31 @@ describe('reporte por ambiente', () => {
   it('los totales por ambiente suman la cantidad de tickets', () => {
     const suma = porAmbiente().reduce((acc, f) => acc + f.total, 0);
     expect(suma).toBe(listar().length);
+  });
+});
+
+describe('tipo de organizacion', () => {
+  it('arranca con ocho lugares y un id estable por lugar', () => {
+    expect(lugares()).toHaveLength(8);
+    expect(lugares().map((l) => l.id)).toEqual(['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8']);
+  });
+
+  it('al cambiar el tipo cambian los lugares, no las solicitudes', () => {
+    const cuantas = listar().length;
+
+    usarTipoDemo('hotel');
+    expect(obtenerTipoDemo()).toBe('hotel');
+    expect(listar()).toHaveLength(cuantas);
+    expect(listar().some((t) => t.ambiente_codigo === 'H-204')).toBe(true);
+
+    usarTipoDemo('educacion');
+    expect(listar()).toHaveLength(cuantas);
+    expect(listar().some((t) => t.ambiente_codigo === 'A-203')).toBe(true);
+  });
+
+  it('un tipo que no existe deja todo como estaba', () => {
+    usarTipoDemo('empresa');
+    expect(usarTipoDemo('nave-espacial')).toBe('empresa');
+    expect(listar().some((t) => t.ambiente_codigo === 'DIS')).toBe(true);
   });
 });

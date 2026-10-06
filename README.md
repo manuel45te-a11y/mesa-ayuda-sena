@@ -1,10 +1,14 @@
-# Mesa de Ayuda SENA
+# Mesa de Ayuda
 
-Sistema de gestión de incidencias (tickets) para los ambientes de formación de un centro
-del SENA. Un aprendiz o instructor reporta una falla, el equipo de soporte la atiende y el
-sistema mide cuánto se demoró frente al tiempo acordado (SLA).
+Sistema de gestión de incidencias (tickets) para cualquier organización: una empresa, un
+colegio, una clínica, un hotel. Alguien reporta una falla, el equipo de soporte la atiende
+y el sistema mide cuánto se demoró frente al tiempo acordado (SLA).
 
-Proyecto formativo · Aplicación web y móvil con **Expo (React Native)** + **Supabase**.
+La app se adapta a cada organización sin tocar el código: su nombre, su color, su logo,
+cómo se llaman los lugares donde ocurren las fallas y qué datos pide al registrarse
+(ver [Adaptar la app](#adaptar-la-app-a-tu-organización)).
+
+Aplicación web y móvil con **Expo (React Native)** + **Supabase**.
 
 ---
 
@@ -15,7 +19,7 @@ Proyecto formativo · Aplicación web y móvil con **Expo (React Native)** + **S
 1. Entra a [supabase.com](https://supabase.com) y crea un proyecto nuevo (plan gratuito).
 2. Ve a **SQL Editor → New query**, pega todo el contenido de
    [`supabase/instalar-todo.sql`](supabase/instalar-todo.sql) y presiona **Run**. Ese
-   archivo crea el esquema completo, carga los ambientes y las categorías y aplica los
+   archivo crea el esquema completo, carga los lugares y las categorías y aplica los
    roles.
    **Si tu base ya existía y tiene datos, no uses ese archivo:** pega solo
    [`supabase/roles-y-asignacion.sql`](supabase/roles-y-asignacion.sql), que agrega lo que
@@ -34,6 +38,34 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 
 La `anon key` es pública por diseño: la seguridad real la dan las políticas RLS del esquema.
 
+#### Adaptar la app a tu organización
+
+En el mismo `.env`, todas opcionales:
+
+```
+EXPO_PUBLIC_ORGANIZACION=Hotel Las Palmas
+EXPO_PUBLIC_TIPO_ORGANIZACION=hotel
+EXPO_PUBLIC_COLOR=turquesa
+EXPO_PUBLIC_LOGO_URL=https://…/logo.png
+```
+
+| Variable | Para qué sirve |
+|---|---|
+| `EXPO_PUBLIC_ORGANIZACION` | Nombre que se muestra en la app. Vacío: solo "Mesa de Ayuda" |
+| `EXPO_PUBLIC_TIPO_ORGANIZACION` | `empresa` (por defecto), `educacion`, `salud` u `hotel` |
+| `EXPO_PUBLIC_COLOR` | `indigo` (por defecto), `azul`, `violeta` o `turquesa` |
+| `EXPO_PUBLIC_LOGO_URL` | Logo propio; si no, se usa el símbolo de la app |
+
+El **tipo** decide cómo se llaman los lugares donde ocurren las fallas (ubicación, espacio,
+área) y qué dos datos se le piden a cada persona al registrarse (área y cargo, programa y
+grupo, servicio y cargo…). Los tipos están en
+[`src/config/organizacion.js`](src/config/organizacion.js): agregar uno nuevo son quince
+líneas. En el modo demostración el tipo se cambia desde **Perfil**, sin configurar nada.
+
+Los **colores** salen de dos paletas, clara y oscura, y la app usa la que tenga el
+dispositivo. Las dos están pensadas para mirarlas mucho rato y el contraste de cada
+combinación de texto se comprueba en las pruebas.
+
 ### 3. Instalar y ejecutar
 
 ```bash
@@ -49,13 +81,13 @@ Para móvil: `npm start` y escanea el QR con la app **Expo Go**.
 npm test
 ```
 
-144 pruebas unitarias sobre la lógica de negocio (flujo del ticket, roles y permisos,
+176 pruebas unitarias sobre la lógica de negocio (flujo del ticket, roles y permisos,
 asignación, evidencias, cálculo del tiempo de atención, caducidad de la sesión, capa de
 datos y rutas de la aplicación). Detalle en [`docs/05-pruebas.md`](docs/05-pruebas.md).
 
 ### 5. Nombrar administradores y asignar roles
 
-Toda cuenta nueva nace como **Usuario / Aprendiz**: nadie elige su rol al registrarse.
+Toda cuenta nueva nace como **Usuario**: nadie elige su rol al registrarse.
 
 1. Regístrate desde la app con tu correo.
 2. Abre [`supabase/roles-y-asignacion.sql`](supabase/roles-y-asignacion.sql), escribe tu
@@ -107,12 +139,12 @@ evidencias se pueden subir con una foto real o con **Usar foto de ejemplo**, que
 sin internet.
 
 Sirve para dos cosas: revisar la interfaz sin haber configurado nada, y tener un plan B
-en la sustentación si falla el internet del centro. Mientras está activo, una cinta ámbar
+en una presentación si falla el internet. Mientras está activo, una cinta ámbar
 avisa en todas las pantallas de que los datos son de ejemplo.
 
 ## Roles y qué puede hacer cada uno
 
-| Acción | Usuario / Aprendiz | Técnico | Administrador |
+| Acción | Usuario | Técnico | Administrador |
 |---|:--:|:--:|:--:|
 | Reportar una falla | ✅ | ✅ | ✅ |
 | Ver sus propias solicitudes y sus evidencias | ✅ | ✅ | ✅ |
@@ -229,18 +261,20 @@ de las fallas se atendió dentro del tiempo comprometido?**
 ## Estructura del proyecto
 
 ```
-mesa-ayuda-sena/
+mesa-ayuda/
 ├── App.js                     Punto de entrada
 ├── jest.config.js             Configuración de las pruebas
 ├── supabase/
 │   ├── instalar-todo.sql      Los cuatro de abajo en un solo pegado (base nueva)
 │   ├── 00-limpiar.sql         Borra el esquema anterior (solo si ya existía)
 │   ├── schema.sql             Tablas, triggers, vistas y políticas RLS
-│   ├── seed.sql               Ambientes y categorías
+│   ├── seed.sql               Lugares y categorías
 │   ├── roles-y-asignacion.sql Roles, asignación, evidencias y seguridad
 │   │                          (en una base existente se ejecuta solo este)
 │   └── datos-prueba.sql       Seis tickets de ejemplo
 ├── src/
+│   ├── config/
+│   │   └── organizacion.js Nombre, tipo, color y logo de la organización
 │   ├── lib/
 │   │   ├── supabase.js        Cliente de Supabase
 │   │   ├── datos.js           Capa de acceso: decide entre base real y demo
