@@ -1,0 +1,5 @@
+# Todas las direcciones las resuelve la app (rutas web): si alguien abre
+# /solicitudes/MA-2026-0004 o recarga esa página, se sirve index.html y la app
+# muestra la pantalla que corresponde. Lo usa Netlify; en Vercel lo hace la
+# regla "rewrites" de vercel.json.
+/*    /index.html   200

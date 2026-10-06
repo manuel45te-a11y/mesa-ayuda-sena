@@ -1,0 +1,13 @@
+# Publicación en Netlify. Las credenciales (EXPO_PUBLIC_SUPABASE_URL,
+# EXPO_PUBLIC_SUPABASE_ANON_KEY) y los datos de la organización se configuran
+# en Site settings → Environment variables.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# La app resuelve sus propias direcciones.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
